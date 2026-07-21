@@ -110,7 +110,8 @@ def get_history(session_id):
     history = Message.query.filter_by(session_id=session_id).order_by(Message.created_at).all()
     return jsonify({'messages': [{'role': m.role, 'content': m.content} for m in history]})
 
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True, port=5000)
