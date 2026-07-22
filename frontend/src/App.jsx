@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import "./App.css";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -78,87 +79,108 @@ export default function App() {
     setActiveTab("preview");
   };
 
+  const segments = Array.from({ length: 20 }, (_, i) => i < editCount);
+
   return (
-    <div style={styles.container}>
-      <div style={styles.chatPanel}>
-        <div style={styles.header}>
-          <h2 style={styles.title}>AI Coding Assistant</h2>
-          <div style={styles.headerRight}>
-            <span style={styles.editCount}>Edits: {editCount}/20</span>
-            <button onClick={newSession} style={styles.newSessionBtn}>New Session</button>
+    <div className="app-shell">
+      <div className="chat-panel">
+        <div className="header">
+          <h2 className="wordmark">
+            AI Coding Assistant<span className="cursor">▍</span>
+          </h2>
+          <div className="header-right">
+            <div className="gauge-wrap">
+              <div className="gauge-label"><strong>{editCount}</strong>/20 edits</div>
+              <div className="gauge-track">
+                {segments.map((filled, i) => (
+                  <div
+                    key={i}
+                    className={`gauge-seg ${filled ? "filled" : ""} ${filled && i >= 16 ? "hot" : ""}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <button onClick={newSession} className="new-session-btn">New Session</button>
           </div>
         </div>
 
         {limitStatus === "warning" && (
-          <div style={styles.warning}>⚠️ Approaching session limit ({editCount}/20)</div>
+          <div className="banner warning">⚠ Approaching session limit — {editCount}/20 edits used</div>
         )}
         {limitStatus === "pause" && (
-          <div style={styles.error}>🚫 Session limit reached. Start a new session.</div>
+          <div className="banner error">⛔ Session limit reached. Start a new session to continue.</div>
         )}
 
-        <div style={styles.messages}>
-          {messages.map((m, i) => (
-            <div key={i} style={m.role === "user" ? styles.userMsg : styles.assistantMsg}>
-              <ReactMarkdown>{m.content}</ReactMarkdown>
-            </div>
-          ))}
-          {loading && <div style={styles.assistantMsg}>Thinking...</div>}
-          <div ref={bottomRef} />
-        </div>
+        {messages.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-glyph">&gt;_</div>
+            <p>Describe what you want to build, and I'll generate the code.<br />Toggle Debug to fix something that's broken.</p>
+          </div>
+        ) : (
+          <div className="messages">
+            {messages.map((m, i) => (
+              <div key={i} className={`msg ${m.role === "user" ? "user" : "assistant"}`}>
+                <ReactMarkdown>{m.content}</ReactMarkdown>
+              </div>
+            ))}
+            {loading && <div className="msg assistant thinking">Generating…</div>}
+            <div ref={bottomRef} />
+          </div>
+        )}
 
         {isDebug && (
           <input
-            style={styles.errorInput}
+            className="error-input"
             placeholder="Describe the error or bug..."
             value={errorInfo}
             onChange={(e) => setErrorInfo(e.target.value)}
           />
         )}
 
-        <div style={styles.inputRow}>
+        <div className="input-row">
           <button
             onClick={() => setIsDebug(!isDebug)}
-            style={isDebug ? styles.debugActiveBtn : styles.debugBtn}
+            className={`debug-btn ${isDebug ? "active" : ""}`}
           >
             {isDebug ? "Debug ON" : "Debug"}
           </button>
           <textarea
-            style={styles.input}
+            className="chat-input"
             placeholder={isDebug ? "Describe what to fix..." : "Ask me to build something..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendMessage())}
             rows={2}
           />
-          <button onClick={sendMessage} style={styles.sendBtn} disabled={loading}>
+          <button onClick={sendMessage} className="send-btn" disabled={loading}>
             Send
           </button>
         </div>
       </div>
 
-      <div style={styles.rightPanel}>
-        <div style={styles.tabBar}>
+      <div className="right-panel">
+        <div className="tab-bar">
           <button
             onClick={() => setActiveTab("editor")}
-            style={activeTab === "editor" ? styles.activeTab : styles.tab}
+            className={`tab ${activeTab === "editor" ? "active" : ""}`}
           >
             Code Editor
           </button>
           <button
             onClick={handlePreviewTab}
-            style={activeTab === "preview" ? styles.activeTab : styles.tab}
+            className={`tab ${activeTab === "preview" ? "active" : ""}`}
           >
             Live Preview
           </button>
           <button
             onClick={() => navigator.clipboard.writeText(code)}
-            style={styles.copyBtn}
+            className="copy-btn"
           >
             Copy
           </button>
         </div>
 
-        <div style={styles.panelContent}>
+        <div className="panel-content">
           {activeTab === "editor" ? (
             <Editor
               height="100%"
@@ -171,7 +193,7 @@ export default function App() {
           ) : (
             <iframe
               srcDoc={previewCode}
-              style={styles.iframe}
+              className="iframe-preview"
               title="Live Preview"
               sandbox="allow-scripts"
             />
@@ -181,31 +203,3 @@ export default function App() {
     </div>
   );
 }
-
-const styles = {
-  container: { display: "flex", height: "100vh", background: "#0f0f0f", color: "#fff", fontFamily: "monospace" },
-  chatPanel: { width: "38%", display: "flex", flexDirection: "column", borderRight: "1px solid #2a2a2a" },
-  rightPanel: { flex: 1, display: "flex", flexDirection: "column" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid #2a2a2a", background: "#1a1a1a" },
-  title: { margin: 0, fontSize: "16px", color: "#61dafb" },
-  headerRight: { display: "flex", alignItems: "center", gap: "10px" },
-  editCount: { fontSize: "12px", color: "#888" },
-  newSessionBtn: { background: "#2a2a2a", color: "#fff", border: "1px solid #444", padding: "4px 10px", borderRadius: "4px", cursor: "pointer", fontSize: "12px" },
-  messages: { flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" },
-  userMsg: { background: "#1e3a5f", padding: "10px 14px", borderRadius: "8px", alignSelf: "flex-end", maxWidth: "85%", fontSize: "13px" },
-  assistantMsg: { background: "#1a1a1a", padding: "10px 14px", borderRadius: "8px", alignSelf: "flex-start", maxWidth: "95%", fontSize: "13px", border: "1px solid #2a2a2a" },
-  warning: { background: "#3a2a00", color: "#ffaa00", padding: "8px 16px", fontSize: "12px" },
-  error: { background: "#3a0000", color: "#ff4444", padding: "8px 16px", fontSize: "12px" },
-  inputRow: { display: "flex", gap: "8px", padding: "12px", borderTop: "1px solid #2a2a2a", alignItems: "flex-end" },
-  input: { flex: 1, background: "#1a1a1a", color: "#fff", border: "1px solid #333", borderRadius: "6px", padding: "8px", fontSize: "13px", resize: "none", fontFamily: "monospace" },
-  sendBtn: { background: "#61dafb", color: "#000", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" },
-  debugBtn: { background: "#2a2a2a", color: "#888", border: "1px solid #444", padding: "8px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "12px" },
-  debugActiveBtn: { background: "#3a1a00", color: "#ffaa00", border: "1px solid #ffaa00", padding: "8px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "12px" },
-  errorInput: { margin: "0 12px 8px", background: "#1a1a1a", color: "#fff", border: "1px solid #ffaa00", borderRadius: "6px", padding: "8px", fontSize: "12px", fontFamily: "monospace" },
-  tabBar: { display: "flex", alignItems: "center", background: "#1a1a1a", borderBottom: "1px solid #2a2a2a", padding: "0 8px" },
-  tab: { background: "none", color: "#888", border: "none", padding: "10px 16px", cursor: "pointer", fontSize: "13px", borderBottom: "2px solid transparent" },
-  activeTab: { background: "none", color: "#61dafb", border: "none", padding: "10px 16px", cursor: "pointer", fontSize: "13px", borderBottom: "2px solid #61dafb" },
-  copyBtn: { marginLeft: "auto", background: "#2a2a2a", color: "#fff", border: "1px solid #444", padding: "4px 10px", borderRadius: "4px", cursor: "pointer", fontSize: "12px" },
-  panelContent: { flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" },
-  iframe: { flex: 1, width: "100%", height: "100%", border: "none", background: "#fff" },
-};
