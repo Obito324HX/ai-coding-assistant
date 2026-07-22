@@ -18,6 +18,8 @@ export default function App() {
   const [limitStatus, setLimitStatus] = useState("ok");
   const [editCount, setEditCount] = useState(0);
   const [activeTab, setActiveTab] = useState("editor");
+  const [mobileScreen, setMobileScreen] = useState("chat"); // "chat" | "code"
+  const [hasNewCode, setHasNewCode] = useState(false);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export default function App() {
         setCode(newCode);
         setPreviewCode(newCode);
         setActiveTab("preview");
+        setHasNewCode(true);
       }
       setIsDebug(false);
       setErrorInfo("");
@@ -72,6 +75,13 @@ export default function App() {
     setEditCount(0);
     setLimitStatus("ok");
     setActiveTab("editor");
+    setMobileScreen("chat");
+    setHasNewCode(false);
+  };
+
+  const openCodeScreen = () => {
+    setMobileScreen("code");
+    setHasNewCode(false);
   };
 
   const handlePreviewTab = () => {
@@ -82,7 +92,7 @@ export default function App() {
   const segments = Array.from({ length: 20 }, (_, i) => i < editCount);
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-screen={mobileScreen}>
       <div className="chat-panel">
         <div className="header">
           <h2 className="wordmark">
@@ -101,6 +111,9 @@ export default function App() {
               </div>
             </div>
             <button onClick={newSession} className="new-session-btn">New Session</button>
+            <button onClick={openCodeScreen} className="view-code-btn">
+              {"</>"} Code{hasNewCode && <span className="new-dot" />}
+            </button>
           </div>
         </div>
 
@@ -160,6 +173,9 @@ export default function App() {
 
       <div className="right-panel">
         <div className="tab-bar">
+          <button onClick={() => setMobileScreen("chat")} className="back-btn">
+            ← Chat
+          </button>
           <button
             onClick={() => setActiveTab("editor")}
             className={`tab ${activeTab === "editor" ? "active" : ""}`}
