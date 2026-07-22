@@ -62,6 +62,7 @@ body {
 .app-shell {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   background: var(--ink);
   background-image:
     radial-gradient(circle at 15% 0%, #ff8a4c0d, transparent 40%),
@@ -69,7 +70,7 @@ body {
 }
 
 @media (max-width: 860px) {
-  .app-shell { flex-direction: column; height: auto; min-height: 100vh; }
+  .app-shell { flex-direction: column; height: auto; min-height: 100vh; min-height: 100dvh; }
 }
 
 /* ===== Chat panel ===== */
@@ -83,7 +84,7 @@ body {
 }
 
 @media (max-width: 860px) {
-  .chat-panel { width: 100%; min-width: 0; border-right: none; height: 100vh; }
+  .chat-panel { width: 100%; min-width: 0; border-right: none; height: 100vh; height: 100dvh; }
   .app-shell[data-screen="code"] .chat-panel { display: none; }
 }
 
@@ -389,7 +390,7 @@ body {
 }
 
 @media (max-width: 860px) {
-  .right-panel { height: 100vh; display: none; }
+  .right-panel { height: 100vh; height: 100dvh; display: none; }
   .app-shell[data-screen="code"] .right-panel { display: flex; }
 }
 

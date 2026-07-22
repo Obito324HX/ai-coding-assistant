@@ -21,10 +21,18 @@ export default function App() {
   const [mobileScreen, setMobileScreen] = useState("chat"); // "chat" | "code"
   const [hasNewCode, setHasNewCode] = useState(false);
   const bottomRef = useRef(null);
+  const editorRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (mobileScreen === "code" && activeTab === "editor") {
+      const t = setTimeout(() => editorRef.current?.layout(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [mobileScreen, activeTab]);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -203,6 +211,7 @@ export default function App() {
               defaultLanguage="html"
               value={code}
               onChange={(val) => setCode(val || "")}
+              onMount={(editor) => { editorRef.current = editor; }}
               theme="vs-dark"
               options={{ fontSize: 14, minimap: { enabled: false }, wordWrap: "on" }}
             />
